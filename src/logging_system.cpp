@@ -138,7 +138,7 @@ namespace soralog {
       if (current == group) {
         return 0;
       }
-      if (current->hasLevelOverridden() && current->hasSinkOverridden()) {
+      if (current->isLevelOverridden() && current->isSinkOverridden()) {
         return -1;
       }
       if (not current->parent()) {
@@ -204,7 +204,7 @@ namespace soralog {
       if (current == group) {
         return 0;
       }
-      if (current->hasSinkOverridden()) {
+      if (current->isSinkOverridden()) {
         return -1;
       }
       if (not current->parent()) {
@@ -234,7 +234,7 @@ namespace soralog {
 
     for (auto it = loggers_.begin(); it != loggers_.end();) {
       if (auto logger = it->second.lock()) {
-        if (not logger->hasSinkOverridden()) {
+        if (not logger->isSinkOverridden()) {
           if (auto it2 = passed_groups.find(logger->group());
               it2 != passed_groups.end()) {
             if (it2->second != -1) {
@@ -271,7 +271,7 @@ namespace soralog {
       if (current == group) {
         return 0;
       }
-      if (current->hasLevelOverridden()) {
+      if (current->isLevelOverridden()) {
         return -1;
       }
       if (not current->parent()) {
@@ -301,7 +301,7 @@ namespace soralog {
 
     for (auto it = loggers_.begin(); it != loggers_.end();) {
       if (auto logger = it->second.lock()) {
-        if (not logger->hasLevelOverridden()) {
+        if (not logger->isLevelOverridden()) {
           if (auto it2 = passed_groups.find(logger->group());
               it2 != passed_groups.end()) {
             if (it2->second != -1) {
@@ -355,9 +355,9 @@ namespace soralog {
 
     // Check for recursion
     if (parent->parent() != group) {
-      for (auto current = parent->parent(); current!=nullptr;
+      for (auto current = parent->parent(); current != nullptr;
            current = current->parent()) {
-        if (current==group) {
+        if (current == group) {
           // Cyclic parentness is detected
           return false;
         }

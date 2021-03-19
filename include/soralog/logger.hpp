@@ -195,8 +195,8 @@ namespace soralog {
      * @returns true if level is overridden, and true if it is inherited from
      * group
      */
-    [[nodiscard]] bool hasLevelOverridden() const noexcept {
-      return has_level_overridden_;
+    [[nodiscard]] bool isLevelOverridden() const noexcept {
+      return is_level_overridden_;
     }
 
     /**
@@ -232,8 +232,8 @@ namespace soralog {
      * @returns true if sink is overridden, and true if it is inherited from
      * group
      */
-    [[nodiscard]] bool hasSinkOverridden() const noexcept {
-      return has_sink_overridden_;
+    [[nodiscard]] bool isSinkOverridden() const noexcept {
+      return is_sink_overridden_;
     }
 
     /**
@@ -290,10 +290,10 @@ namespace soralog {
     std::shared_ptr<const Group> group_;
 
     std::shared_ptr<Sink> sink_;
-    bool has_sink_overridden_{};
+    bool is_sink_overridden_{};
 
     Level level_{};
-    bool has_level_overridden_{};
+    bool is_level_overridden_{};
   };
 
 }  // namespace soralog

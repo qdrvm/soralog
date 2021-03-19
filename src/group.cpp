@@ -41,20 +41,20 @@ namespace soralog {
   void Group::resetLevel() {
     if (parent_group_) {
       level_ = parent_group_->level();
-      has_level_overridden_ = false;
+      is_level_overridden_ = false;
     }
   }
 
   void Group::setLevel(Level level) {
     if (parent_group_) {
-      has_level_overridden_ = true;
+      is_level_overridden_ = true;
     }
     level_ = level;
   }
 
   void Group::setLevelFromGroup(const std::shared_ptr<const Group> &group) {
     assert(group);
-    has_level_overridden_ = group != parent_group_;
+    is_level_overridden_ = group != parent_group_;
     level_ = group->level();
   }
 
@@ -69,14 +69,14 @@ namespace soralog {
   void Group::resetSink() {
     if (parent_group_) {
       sink_ = parent_group_->sink();
-      has_sink_overridden_ = false;
+      is_sink_overridden_ = false;
     }
   }
 
   void Group::setSink(std::shared_ptr<const Sink> sink) {
     assert(sink);
     if (parent_group_) {
-      has_sink_overridden_ = true;
+      is_sink_overridden_ = true;
     }
     sink_ = std::move(sink);
   }
@@ -89,7 +89,7 @@ namespace soralog {
 
   void Group::setSinkFromGroup(const std::shared_ptr<const Group> &group) {
     assert(group);
-    has_sink_overridden_ = group != parent_group_;
+    is_sink_overridden_ = group != parent_group_;
     sink_ = group->sink();
   }
 
@@ -108,10 +108,10 @@ namespace soralog {
   void Group::setParentGroup(std::shared_ptr<const Group> group) {
     parent_group_ = std::move(group);
     if (parent_group_) {
-      if (not has_sink_overridden_) {
+      if (not is_sink_overridden_) {
         setSinkFromGroup(parent_group_);
       }
-      if (not has_level_overridden_) {
+      if (not is_level_overridden_) {
         setLevelFromGroup(parent_group_);
       }
     }
