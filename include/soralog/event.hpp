@@ -1,5 +1,7 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Soramitsu Co., 2021-2023
+ * Copyright Quadrivium Co., 2023
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -80,10 +82,12 @@ namespace soralog {
       } it{message_data_};
 
       try {
-        message_size_ = ::fmt::vformat_to_n(
-            it, max_message_length,
-            ::fmt::detail_exported::compile_string_to_view<char>(format),
-            ::fmt::make_format_args(args...)).size;
+        message_size_ =
+            ::fmt::vformat_to_n(
+                it, max_message_length,
+                ::fmt::detail_exported::compile_string_to_view<char>(format),
+                ::fmt::make_format_args(args...))
+                .size;
       } catch (const std::exception &exception) {
         message_size_ = fmt::format_to_n(it, max_message_length,
                                          "Format error: {}; Format: {}",
