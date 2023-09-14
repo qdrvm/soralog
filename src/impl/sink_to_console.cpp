@@ -9,10 +9,9 @@
 #include <iostream>
 #include <string_view>
 
+#include <fmt/format.h>
 #include <fmt/chrono.h>
 #include <fmt/color.h>
-
-#include <soralog/common.hpp>
 
 namespace soralog {
 

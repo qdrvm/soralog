@@ -5,6 +5,8 @@
 
 #include <gtest/gtest.h>
 
+#include <fmt/format.h>
+
 #include <soralog/macro.hpp>
 
 using namespace soralog;
@@ -17,8 +19,10 @@ class MacrosTest : public ::testing::Test {
     void log(Level lvl, const Format &format, Args &&...args) {
       last_level = lvl;
       size_t len =
-          soralog::fmt::format_to_n(message_buf.begin(), message_buf.size(),
-                                    format, std::forward<Args>(args)...)
+          fmt::vformat_to_n(
+              message_buf.begin(), message_buf.size(),
+              ::fmt::detail_exported::compile_string_to_view<char>(format),
+              ::fmt::make_format_args(args...))
               .size;
       last_message = std::string_view(message_buf.data(),
                                       std::min(len, message_buf.size()));
