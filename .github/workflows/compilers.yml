@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest]
+        os: [ubuntu-24.04, macos-15]
         compiler: [{
           "cc": "gcc",
           "cxx": "g++"
@@ -30,7 +30,7 @@ jobs:
           "cxx": "clang++"
          }]
         exclude:
-          - os: macOS-latest
+          - os: macos-15
             compiler:
               cc: gcc
     steps:

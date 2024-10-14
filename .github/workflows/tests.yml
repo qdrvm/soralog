@@ -38,7 +38,7 @@ jobs:
          - name: "Undefined Behavior Sanitizer"
            sanitizer: UBSAN
     name: "${{ matrix.options.name }}"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v1
