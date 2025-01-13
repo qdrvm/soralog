@@ -1,0 +1,16 @@
+{
+  "name": "soralog",
+  "version": "0.2.5",
+  "dependencies": [
+    "fmt",
+    "yaml-cpp"
+  ],
+  "features": {
+    "soralog-tests": {
+      "description": "Test of soralog's mechanisms",
+      "dependencies": [
+        "gtest"
+      ]
+    }
+  }
+}

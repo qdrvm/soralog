@@ -5,16 +5,22 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-if (TESTING OR COVERAGE)
-  hunter_add_package(GTest)
-  find_package(GTest CONFIG REQUIRED)
-endif()
+if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.27")
+    cmake_policy(SET CMP0144 NEW)
+endif ()
 
-hunter_add_package(yaml-cpp)
-find_package(yaml-cpp CONFIG REQUIRED)
-if (NOT TARGET yaml-cpp::yaml-cpp)
-    add_library(yaml-cpp::yaml-cpp ALIAS yaml-cpp)
-endif()
+function(reg_dependency name)
+    if (PACKAGE_MANAGER STREQUAL "hunter")
+        hunter_add_package(${name})
+    endif ()
+    find_package(${name} CONFIG REQUIRED)
+endfunction()
 
-hunter_add_package(fmt)
-find_package(fmt CONFIG REQUIRED)
+
+reg_dependency(yaml-cpp)
+
+reg_dependency(fmt)
+
+if (BUILD_TESTS)
+    reg_dependency(GTest)
+endif()
