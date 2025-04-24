@@ -117,7 +117,7 @@ namespace soralog {
             ::fmt::vformat_to_n<OutputIt>(
                 it,
                 max_message_length,
-                ::fmt::detail_exported::compile_string_to_view<char>(format),
+                ::fmt::detail::compile_string_to_view<char>(format),
                 ::fmt::make_format_args(args...))
                 .size;
       } catch (const std::exception &exception) {
