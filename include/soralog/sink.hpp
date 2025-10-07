@@ -15,25 +15,12 @@
 
 #include <soralog/circular_buffer.hpp>
 #include <soralog/event.hpp>
+#include <soralog/likely.hpp>
 
 #ifdef NDEBUG
 #define IF_RELEASE true
 #else
 #define IF_RELEASE false
-#endif
-
-#if not defined(LIKELY_IF)
-#if __cplusplus >= 202002L
-#define LIKELY_IF(x) [[likely]] if (x)
-#elif defined(__has_builtin)
-#if __has_builtin(__builtin_expect)
-#define LIKELY_IF(x) if (__builtin_expect((x), 1))
-#else
-#define LIKELY_IF(x) if (x)
-#endif
-#else
-#define LIKELY_IF(x) if (x)
-#endif
 #endif
 
 namespace soralog {

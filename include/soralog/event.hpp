@@ -16,6 +16,7 @@
 #include <fmt/ostream.h>
 
 #include <soralog/level.hpp>
+#include <soralog/likely.hpp>
 #include <soralog/sink.hpp>
 #include <soralog/util.hpp>
 
@@ -129,6 +130,25 @@ namespace soralog {
                             .size;
         name = "Soralog";
         level_ = Level::ERROR;
+      }
+
+      UNLIKELY_IF(message_size_ > max_message_length) {
+        std::string_view warning =
+            " !!! message truncated, set max_message_length: ";
+        auto warning_size =
+            warning.size()
+            + ::fmt::detail::count_digits(static_cast<uint64_t>(message_size_));
+        UNLIKELY_IF(warning_size > max_message_length) {
+          message_size_ = ::fmt::format_to_n(it,
+                                             max_message_length,
+                                             "max_message_length: {}",
+                                             message_size_)
+                              .size;
+        }
+        else {
+          it.pos += max_message_length - warning_size;
+          ::fmt::format_to_n(it, warning_size, "{}{}", warning, message_size_);
+        }
       }
 
       // Ensure message does not exceed allowed length
