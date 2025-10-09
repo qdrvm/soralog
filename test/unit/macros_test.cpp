@@ -35,13 +35,12 @@ class MacrosTest : public ::testing::Test {
     void log(Level lvl, const Format &format, Args &&...args) {
       last_level = lvl;
       using OutputIt = decltype(message_buf.begin());
-      size_t len =
-          ::fmt::vformat_to_n<OutputIt>(
-              message_buf.begin(),
-              message_buf.size(),
-              ::fmt::detail_exported::compile_string_to_view<char>(format),
-              ::fmt::make_format_args(args...))
-              .size;
+      size_t len = ::fmt::vformat_to_n<OutputIt>(
+                       message_buf.begin(),
+                       message_buf.size(),
+                       ::fmt::detail::compile_string_to_view<char>(format),
+                       ::fmt::make_format_args(args...))
+                       .size;
       last_message = std::string_view(message_buf.data(),
                                       std::min(len, message_buf.size()));
     }
