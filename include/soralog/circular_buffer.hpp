@@ -13,6 +13,8 @@
 #include <optional>
 #include <vector>
 
+#include "soralog/busy_wait.hpp"
+
 #ifdef NDEBUG
 #define IF_RELEASE true
 #else
@@ -47,7 +49,8 @@ namespace soralog {
      * @brief Represents a buffer node storing a single element.
      */
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
-    struct Node final {
+    class Node final {
+     public:
       /**
        * @brief Initializes the node with an element.
        * @tparam Args Argument types for constructing the element.
@@ -56,6 +59,18 @@ namespace soralog {
       template <typename... Args>
       void init(Args &&...args) {
         new (item_) T(std::forward<Args>(args)...);
+      }
+
+      bool tryLock() {
+        if (busy.test_and_set()) {
+          std::this_thread::yield();
+          return false;
+        }
+        return true;
+      }
+
+      void unlock() {
+        busy.clear();
       }
 
       /**
@@ -67,10 +82,9 @@ namespace soralog {
         return *reinterpret_cast<const T *>(item_);
       }
 
+     private:
       // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
       std::atomic_flag busy{false};  ///< Flag indicating if the node is in use.
-
-     private:
       // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
       alignas(std::alignment_of_v<T>) char item_[sizeof(T)];
     };
@@ -96,7 +110,7 @@ namespace soralog {
        */
       ~NodeRef() noexcept(IF_RELEASE) {
         if (node) {
-          node->busy.clear();
+          node->unlock();
         }
       }
 
@@ -167,12 +181,8 @@ namespace soralog {
      * @return Maximum number of elements.
      */
     size_t capacity() const noexcept {
-      while (busy_.test_and_set()) {
-        continue;
-      }
-      auto ret = capacity_;
-      busy_.clear();
-      return ret;
+      std::unique_lock lock_busy{busy_};
+      return capacity_;
     }
 
     /**
@@ -180,12 +190,8 @@ namespace soralog {
      * @return Number of elements in the buffer.
      */
     size_t size() const noexcept {
-      while (busy_.test_and_set()) {
-        continue;
-      }
-      auto ret = size_.load();
-      busy_.clear();
-      return ret;
+      std::unique_lock lock_busy{busy_};
+      return size_.load();
     }
 
     /**
@@ -193,12 +199,8 @@ namespace soralog {
      * @return Number of free slots.
      */
     size_t avail() const noexcept {
-      while (busy_.test_and_set()) {
-        continue;
-      }
-      auto ret = capacity_ - size_;
-      busy_.clear();
-      return ret;
+      std::unique_lock lock_busy{busy_};
+      return capacity_ - size_;
     }
 
     /**
@@ -210,13 +212,10 @@ namespace soralog {
     template <typename... Args>
     [[nodiscard]] NodeRef put(Args &&...args) noexcept(IF_RELEASE) {
       while (true) {
-        if (busy_.test_and_set()) {
-          continue;
-        }
+        std::unique_lock lock_busy{busy_};
 
         // Tail is caught up - queue is full
         if (pop_index_ == push_index_ and size_ != 0) {
-          busy_.clear();
           return {};
         }
 
@@ -226,8 +225,7 @@ namespace soralog {
             raw_data_.data() + element_size_ * push_index_);
 
         // Capture node if not busy
-        if (node.busy.test_and_set()) {
-          busy_.clear();
+        if (not node.tryLock()) {
           continue;
         }
 
@@ -237,7 +235,7 @@ namespace soralog {
         assert(size_ < capacity_);
         ++size_;
 
-        busy_.clear();
+        lock_busy.unlock();
 
         // Emplace item
         node.init(std::forward<Args>(args)...);
@@ -252,13 +250,10 @@ namespace soralog {
      */
     NodeRef get() noexcept(IF_RELEASE) {
       while (true) {
-        if (busy_.test_and_set()) {
-          continue;
-        }
+        std::unique_lock lock_busy{busy_};
 
         // Head is caught up - queue is empty
         if (push_index_ == pop_index_ and size_ == 0) {
-          busy_.clear();
           return {};
         }
 
@@ -268,8 +263,7 @@ namespace soralog {
             raw_data_.data() + element_size_ * pop_index_);
 
         // Capture node if not busy
-        if (node.busy.test_and_set()) {
-          busy_.clear();
+        if (not node.tryLock()) {
           continue;
         }
 
@@ -279,20 +273,18 @@ namespace soralog {
         assert(size_ > 0);
         --size_;
 
-        busy_.clear();
-
         return NodeRef(node);
       }
     }
 
    private:
-    const size_t capacity_;                  ///< Maximum number of elements.
-    const size_t element_size_;              ///< Size of each element.
-    std::vector<std::byte> raw_data_;        ///< Raw buffer storage.
-    std::atomic_size_t size_ = 0;            ///< Current number of elements.
-    std::atomic_size_t push_index_ = 0;      ///< Index for adding elements.
-    std::atomic_size_t pop_index_ = 0;       ///< Index for removing elements.
-    mutable std::atomic_flag busy_ = false;  ///< Lock flag.
+    const size_t capacity_;              ///< Maximum number of elements.
+    const size_t element_size_;          ///< Size of each element.
+    std::vector<std::byte> raw_data_;    ///< Raw buffer storage.
+    std::atomic_size_t size_ = 0;        ///< Current number of elements.
+    std::atomic_size_t push_index_ = 0;  ///< Index for adding elements.
+    std::atomic_size_t pop_index_ = 0;   ///< Index for removing elements.
+    mutable BusyWaitMutex busy_;         ///< Lock flag.
   };
 
 }  // namespace soralog
