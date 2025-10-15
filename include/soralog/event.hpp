@@ -135,20 +135,12 @@ namespace soralog {
       UNLIKELY_IF(message_size_ > max_message_length) {
         constexpr std::string_view warning =
             " <<< truncated; original length: ";
-        auto warning_size =
+        const auto warning_size =
             warning.size()
             + ::fmt::detail::count_digits(static_cast<uint64_t>(message_size_));
-        UNLIKELY_IF(warning_size > max_message_length) {
-          message_size_ = ::fmt::format_to_n(it,
-                                             max_message_length,
-                                             "max_message_length: {}",
-                                             message_size_)
-                              .size;
-        }
-        else {
-          it.pos += max_message_length - warning_size;
-          ::fmt::format_to_n(it, warning_size, "{}{}", warning, message_size_);
-        }
+        LIKELY_IF(max_message_length >= warning_size)
+        it.pos += max_message_length - warning_size;
+        ::fmt::format_to_n(it, warning_size, "{}{}", warning, message_size_);
       }
 
       // Ensure message does not exceed allowed length
