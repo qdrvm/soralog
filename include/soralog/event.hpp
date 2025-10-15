@@ -138,8 +138,9 @@ namespace soralog {
         const auto warning_size =
             warning.size()
             + ::fmt::detail::count_digits(static_cast<uint64_t>(message_size_));
-        LIKELY_IF(max_message_length >= warning_size)
-        it.pos += max_message_length - warning_size;
+        LIKELY_IF(max_message_length >= warning_size) {
+          it.pos += max_message_length - warning_size;
+        }
         ::fmt::format_to_n(it, warning_size, "{}{}", warning, message_size_);
       }
 
