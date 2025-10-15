@@ -133,8 +133,8 @@ namespace soralog {
       }
 
       UNLIKELY_IF(message_size_ > max_message_length) {
-        std::string_view warning =
-            " !!! message truncated, set max_message_length: ";
+        constexpr std::string_view warning =
+            " <<< truncated; original length: ";
         auto warning_size =
             warning.size()
             + ::fmt::detail::count_digits(static_cast<uint64_t>(message_size_));
